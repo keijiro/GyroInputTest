@@ -37,15 +37,22 @@ sealed class Test : MonoBehaviour
 
     void Update()
     {
+        var rot = transform.localRotation;
+
+        rot *= new Quaternion(-_accGyro.x, -_accGyro.y, _accGyro.z, _accGyro.w);
+
         var accel = Gamepad.current.GetChildControl<Vector3Control>("accel");
-        var gravity = Vector3.Scale(accel.ReadValue(), new Vector3(1, -1, -1));
+        var gravity = Vector3.Scale(accel.ReadValue(), new Vector3(-1, -1, 1));
 
-        var a_rot = Quaternion.FromToRotation(new Vector3(0, -1, 0), gravity.normalized);
+        var down = rot * gravity;
+        var fix = Quaternion.FromToRotation(down, -Vector3.up);
 
-        var q = new Quaternion(-_accGyro.x, -_accGyro.y, _accGyro.z, _accGyro.w);
-        var g_rot = transform.localRotation * q;
+        fix.w *= 10.0f;
+        fix = fix.normalized;
 
-        transform.localRotation = Quaternion.Slerp(g_rot, a_rot, Time.deltaTime * 5);
+        rot = fix * rot;
+
+        transform.localRotation = rot;
 
         _accGyro = Quaternion.identity;
     }
