@@ -3,14 +3,18 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
-sealed class Test : MonoBehaviour
+sealed class GyroInputTester : MonoBehaviour
 {
-    Quaternion _accGyro;
+    Quaternion _accGyro = Quaternion.identity;
+
+    Quaternion GyroInputToRotation(InputAction.CallbackContext ctx)
+      => Quaternion.Euler(ctx.ReadValue<Vector3>() * Mathf.PI * 2);
 
     void Start()
     {
+        // DS4 input layout extension
         InputSystem.RegisterLayoutOverride(@"
-{""name"": ""DualShock4GamepadHID2"",
+{""name"": ""DualShock4GamepadHIDCustom"",
  ""extend"": ""DualShock4GamepadHID"",
  ""controls"": [
    { ""name"": ""gyro"",    ""format"": ""VC3S"", ""offset"": 13, ""layout"": ""Vector3"" },
@@ -24,36 +28,34 @@ sealed class Test : MonoBehaviour
  ]}"
         );
 
-        _accGyro = Quaternion.identity;
-
-        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/gyro");
-
-        action.performed += ctx =>
-          { var rot = Quaternion.Euler(ctx.ReadValue<Vector3>() * Mathf.PI * 2);
-            _accGyro *= rot; };
-
+        // Gyroscope input callback
+        var action = new InputAction(binding: "<Gamepad>/gyro");
+        action.performed += ctx => _accGyro *= GyroInputToRotation(ctx);
         action.Enable();
     }
 
     void Update()
     {
+        // Current status
         var rot = transform.localRotation;
+        var gyro = _accGyro;
+        _accGyro = Quaternion.identity;
 
-        rot *= new Quaternion(-_accGyro.x, -_accGyro.y, _accGyro.z, _accGyro.w);
+        // Delta rotation from gyroscope
+        rot *= new Quaternion(-gyro.x, -gyro.y, gyro.z, gyro.w);
 
+        // Gravity vector from accelerometer
         var accel = Gamepad.current.GetChildControl<Vector3Control>("accel");
         var gravity = Vector3.Scale(accel.ReadValue(), new Vector3(-1, -1, 1));
 
-        var down = rot * gravity;
-        var fix = Quaternion.FromToRotation(down, -Vector3.up);
+        // Compensation
+        var comp = Quaternion.FromToRotation(rot * gravity, -Vector3.up);
 
-        fix.w *= 10.0f;
-        fix = fix.normalized;
+        // Compensation weakening
+        comp.w *= 10.0f;
+        comp = comp.normalized;
 
-        rot = fix * rot;
-
-        transform.localRotation = rot;
-
-        _accGyro = Quaternion.identity;
+        // Update
+        transform.localRotation = comp * rot;
     }
 }
