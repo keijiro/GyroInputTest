@@ -1,6 +1,6 @@
 # GyroInputTest
 
-**GyroInputTest** is an extension for [Unity Input System] that adds gyroscope input support.
+**GyroInputTest** is an extension for [Unity Input System] that adds gyroscope input support for DualShock 4 gamepads.
 
 [Unity Input System]: https://docs.unity3d.com/Packages/com.unity.inputsystem@latest
 
