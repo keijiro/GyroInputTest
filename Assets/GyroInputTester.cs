@@ -24,18 +24,23 @@ sealed class GyroInputTester : MonoBehaviour
         {""name"":""accel/z"", ""format"":""SHRT"", ""offset"":4 }
       ]}";
 
-    // Constant for gyro angular data
-    // - The actual constant is undocumented and unknown. I just put
-    //   a plasible value by guessing.
-    const float GyroToAngle = 16 * 360 / Mathf.PI;
-
-    // Delta time from the last event
-    static float GetDeltaTime(in InputAction.CallbackContext ctx)
-      => (float)(GyroToAngle * (ctx.time - ctx.control.device.lastUpdateTime));
-
     // Gyro vector data to rotation conversion
     static Quaternion GyroInputToRotation(in InputAction.CallbackContext ctx)
-      => Quaternion.Euler(ctx.ReadValue<Vector3>() * GetDeltaTime(ctx));
+    {
+        // Gyro input data
+        var gyro = ctx.ReadValue<Vector3>();
+
+        // Coefficient converting a gyro data value into a degree
+        // Note: The actual constant is undocumented and unknown.
+        //       I just put a plasible value by guessing.
+        const double GyroToAngle = 16 * 360 / System.Math.PI;
+
+        // Delta time from the last event
+        var dt = ctx.time - ctx.control.device.lastUpdateTime;
+        dt = System.Math.Min(dt, 1.0 / 60); // Discarding large deltas
+
+        return Quaternion.Euler(gyro * (float)(GyroToAngle * dt));
+    }
 
     #endregion
 
