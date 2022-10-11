@@ -44,9 +44,6 @@ sealed class GyroInputTester : MonoBehaviour
     // Accumulation of gyro input
     Quaternion _accGyro = Quaternion.identity;
 
-    // Accelerometer input control
-    Vector3Control _accel;
-
     #endregion
 
     #region MonoBehaviour implementation
@@ -60,9 +57,6 @@ sealed class GyroInputTester : MonoBehaviour
         var action = new InputAction(binding: "<Gamepad>/gyro");
         action.performed += ctx => _accGyro *= GyroInputToRotation(ctx);
         action.Enable();
-
-        // Accelerometer input control
-        _accel = Gamepad.current.GetChildControl<Vector3Control>("accel");
     }
 
     void Update()
@@ -74,8 +68,11 @@ sealed class GyroInputTester : MonoBehaviour
         rot *= _accGyro;
         _accGyro = Quaternion.identity;
 
+        // Accelerometer input
+        var accel = Gamepad.current?.GetChildControl<Vector3Control>("accel");
+        var gravity = accel?.ReadValue() ?? -Vector3.up;
+
         // Drift compensation using gravitational acceleration
-        var gravity = _accel.ReadValue();
         var comp = Quaternion.FromToRotation(rot * gravity, -Vector3.up);
 
         // Compensation reduction
