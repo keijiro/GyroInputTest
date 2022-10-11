@@ -24,6 +24,11 @@ sealed class GyroInputTester : MonoBehaviour
         {""name"":""accel/z"", ""format"":""SHRT"", ""offset"":4 }
       ]}";
 
+    // Constant for gyro angular data
+    // - The actual constant is undocumented and unknown. I just put
+    //   a plasible value by guessing.
+    const float GyroToAngle = 16 * 360 / (250 * Mathf.PI);
+
     #endregion
 
     #region Private members
@@ -35,8 +40,8 @@ sealed class GyroInputTester : MonoBehaviour
     Vector3Control _accel;
 
     // Gyro vector data to rotation conversion
-    Quaternion GyroInputToRotation(InputAction.CallbackContext ctx)
-      => Quaternion.Euler(ctx.ReadValue<Vector3>() * Mathf.PI * 2);
+    static Quaternion GyroInputToRotation(InputAction.CallbackContext ctx)
+      => Quaternion.Euler(ctx.ReadValue<Vector3>() * GyroToAngle);
 
     #endregion
 
@@ -70,7 +75,7 @@ sealed class GyroInputTester : MonoBehaviour
         var comp = Quaternion.FromToRotation(rot * gravity, -Vector3.up);
 
         // Compensation reduction
-        comp.w *= 10.0f;
+        comp.w *= 0.2f /  Time.deltaTime;
         comp = comp.normalized;
 
         // Update
