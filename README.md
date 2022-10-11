@@ -6,6 +6,14 @@
 
 [Unity Input System]: https://docs.unity3d.com/Packages/com.unity.inputsystem@latest
 
+### Known issues
+
+- The constants for gyroscopic data from DualShock 4 are undocumented and
+  unknown. I put plausible values just by guessing. It seems to work but may
+  contain small errors.
+- I implemented gyroscope drift compensation for the pitch/bank angles. It does
+  nothing about the yaw angle; It may drift constantly.
+
 ### Acknowledgements
 
 The initial idea is based on [SG4YK's implementation].
