@@ -27,7 +27,15 @@ sealed class GyroInputTester : MonoBehaviour
     // Constant for gyro angular data
     // - The actual constant is undocumented and unknown. I just put
     //   a plasible value by guessing.
-    const float GyroToAngle = 16 * 360 / (250 * Mathf.PI);
+    const float GyroToAngle = 16 * 360 / Mathf.PI;
+
+    // Delta time from the last event
+    static float GetDeltaTime(in InputAction.CallbackContext ctx)
+      => (float)(GyroToAngle * (ctx.time - ctx.control.device.lastUpdateTime));
+
+    // Gyro vector data to rotation conversion
+    static Quaternion GyroInputToRotation(in InputAction.CallbackContext ctx)
+      => Quaternion.Euler(ctx.ReadValue<Vector3>() * GetDeltaTime(ctx));
 
     #endregion
 
@@ -38,10 +46,6 @@ sealed class GyroInputTester : MonoBehaviour
 
     // Accelerometer input control
     Vector3Control _accel;
-
-    // Gyro vector data to rotation conversion
-    static Quaternion GyroInputToRotation(InputAction.CallbackContext ctx)
-      => Quaternion.Euler(ctx.ReadValue<Vector3>() * GyroToAngle);
 
     #endregion
 
